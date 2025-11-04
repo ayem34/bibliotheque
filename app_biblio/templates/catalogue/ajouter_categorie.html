@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Ajouter une Catégorie{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-primary text-white text-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-folder-plus me-2"></i> Ajouter une Catégorie
+                    </h5>
+                </div>
+                <div class="card-body px-4 py-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        <!-- Champ Nom -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-folder me-2 text-primary"></i> Nom de la Catégorie
+                            </label>
+                            <input type="text" 
+                                   name="nom" 
+                                   class="form-control form-control-sm rounded-pill shadow-sm" 
+                                   placeholder="Ex : Roman, Poésie, Essai..." 
+                                   value="{{ form.nom.value|default_if_none:'' }}">
+                            {{ form.nom.errors }}
+                        </div>
+
+                        <!-- Champ Description -->
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-align-left me-2 text-primary"></i> Description
+                            </label>
+                            <textarea name="description" 
+                                      rows="3" 
+                                      class="form-control rounded-3 shadow-sm" 
+                                      placeholder="Décrivez brièvement la catégorie...">{{ form.description.value|default_if_none:'' }}</textarea>
+                            {{ form.description.errors }}
+                        </div>
+
+                        <!-- Boutons -->
+                        <button type="submit" class="btn btn-success w-100 rounded-pill shadow-sm">
+                            <i class="fas fa-plus-circle me-2"></i> Ajouter
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-100 mt-2 rounded-pill shadow-sm">
+                            <i class="fas fa-arrow-left me-2"></i> Annuler
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

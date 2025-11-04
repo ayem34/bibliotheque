@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Environnements virtuels
+venv/
+
+# Base de données locale
+db.sqlite3
+
+# Fichiers Django
+*.log
+*.pot
+*.sqlite3-journal
+
+# Fichiers médias
+media/

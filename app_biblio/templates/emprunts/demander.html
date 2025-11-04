@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block title %}Demander un emprunt{% endblock %}
+
+{% block content %}
+<div style="max-width:600px; margin:50px auto; font-family:Arial, sans-serif;">
+    <h3 style="text-align:center; margin-bottom:30px;">Demander un nouvel emprunt</h3>
+    
+    <div style="border:1px solid #ccc; border-radius:10px; padding:20px; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+        <form method="POST">
+            {% csrf_token %}
+
+            <!-- Affichage des erreurs générales -->
+            {% if form.non_field_errors %}
+                <div id="alert" style="border:1px solid #f0ad4e; background-color:#fcf8e3; padding:10px; margin-bottom:15px; position:relative;">
+                    <span onclick="this.parentElement.style.display='none';" 
+                          style="position:absolute; top:5px; right:10px; cursor:pointer;">&times;</span>
+                    {% for error in form.non_field_errors %}
+                       <div><i class="fas fa-exclamation-circle me-1"></i> {{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Champ visible pour l'adhérent : Exemplaire uniquement -->
+            <div style="margin-bottom:15px;">
+                {{ form.exemplaire.label_tag }}
+                {{ form.exemplaire }}
+                {% if form.exemplaire.errors %}
+                    <div style="color:red; font-size:0.9em; margin-top:5px;">
+                        {% for error in form.exemplaire.errors %}
+                            {{ error }}<br>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Bouton de soumission -->
+            <button type="submit" 
+                    style="width:100%; padding:10px; border:none; background-color:#007bff; color:white; font-size:1em; border-radius:25px; cursor:pointer;">
+                Demander l'emprunt
+            </button>
+        </form>
+        <!-- Bouton Retour -->
+<div style="text-align:center; margin-top:15px;">
+    <a href="{% url 'liste_emprunts' %}" 
+       style="display:inline-block; padding:8px 20px; border-radius:25px; background-color:#6c757d; color:white; text-decoration:none; font-size:1em; cursor:pointer;">
+       Retour
+    </a>
+</div>
+    </div>
+</div>
+{% endblock %}

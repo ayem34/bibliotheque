@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3 class="mb-4"><i class="fas fa-comments text-primary"></i> Liste des commentaires</h3>
+
+  <!-- Filtre par livre pour admin -->
+  {% if role == "ADMIN" %}
+    <form method="get" class="form-inline mb-3">
+      <div class="form-group d-flex">
+        <select name="livre_id" class="form-control mr-2">
+          <option value="">-- Tous les livres --</option>
+          {% for livre in livres %}
+            <option value="{{ livre.id }}" {% if request.GET.livre_id == livre.id|stringformat:"s" %}selected{% endif %}>
+              {{ livre.titre }}
+            </option>
+          {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-filter"></i> Filtrer
+        </button>
+      </div>
+    </form>
+  {% endif %}
+
+  {% if commentaires %}
+    <div class="card shadow-sm">
+      <div class="card-body">
+        {% if role == "ADMIN" %}
+          <p class="text-muted mb-3">Vous voyez tous les commentaires.</p>
+        {% else %}
+          <p class="text-muted mb-3">Vous voyez uniquement vos commentaires.</p>
+        {% endif %}
+
+        <div class="table-responsive">
+          <table class="table table-hover table-bordered">
+            <thead class="thead-light">
+              <tr>
+                <th>Livre</th>
+                <th>Utilisateur</th>
+                <th>Note</th>
+                <th>Commentaire</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for c in commentaires %}
+              <tr class="{% cycle 'table-info' 'table-light' %}">
+                <td>{{ c.livre.titre }}</td>
+                <td>
+                  {% if c.utilisateur.role == 'ADMIN' %}
+                    <span class="badge badge-danger">{{ c.utilisateur.username }}</span>
+                  {% else %}
+                    <span class="badge badge-success">{{ c.utilisateur.username }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= c.note %}
+                      <i class="fas fa-star text-warning"></i>
+                    {% else %}
+                      <i class="far fa-star text-warning"></i>
+                    {% endif %}
+                  {% endfor %}
+                </td>
+                <td>{{ c.contenu|truncatechars:60 }}</td>
+                <td>{{ c.date_commentaire|date:"d/m/Y H:i" }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    <p class="text-muted">Aucun commentaire disponible.</p>
+  {% endif %}
+</div>
+{% endblock %}

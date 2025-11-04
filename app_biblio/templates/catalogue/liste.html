@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Catalogue{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h3 class="mb-4 text-center">Gestion du Catalogue</h3>
+
+    <div class="row g-4">
+
+        <!-- Auteurs -->
+        <div class="col-md-6 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-primary text-white text-center py-3">
+                    <h5 class="mb-0"><i class="fas fa-user me-2"></i>Auteurs</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for auteur in auteurs %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ auteur.nom }} {{ auteur.prenom }} {{ auteur.nationalite }}
+                                <span>
+                                    <a href="{% url 'modifier_auteur' auteur.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'supprimer_auteur' auteur.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">Aucun auteur disponible.</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'ajouter_auteur' %}" class="btn btn-success w-100 mt-3 rounded-pill">
+                        <i class="fas fa-plus-circle me-2"></i> Ajouter un auteur
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Catégories -->
+        <div class="col-md-6 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-success text-white text-center py-3">
+                    <h5 class="mb-0"><i class="fas fa-list me-2"></i>Catégories</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for categorie in categories %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ categorie.nom }}
+                                <span>
+                                    <a href="{% url 'modifier_categorie' categorie.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'supprimer_categorie' categorie.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">Aucune catégorie disponible.</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'ajouter_categorie' %}" class="btn btn-success w-100 mt-3 rounded-pill">
+                        <i class="fas fa-plus-circle me-2"></i> Ajouter une catégorie
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Types de livres -->
+        <div class="col-md-6 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-warning text-white text-center py-3">
+                    <h5 class="mb-0"><i class="fas fa-book me-2"></i>Types de livres</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for type_livre in types_livre %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ type_livre.nom }}
+                                <span>
+                                    <a href="{% url 'modifier_type_livre' type_livre.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'supprimer_type_livre' type_livre.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">Aucun type disponible.</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'ajouter_type_livre' %}" class="btn btn-success w-100 mt-3 rounded-pill">
+                        <i class="fas fa-plus-circle me-2"></i> Ajouter un type
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Éditeurs -->
+        <div class="col-md-6 col-lg-6">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-info text-white text-center py-3">
+                    <h5 class="mb-0"><i class="fas fa-building me-2"></i>Éditeurs</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        {% for editeur in editeurs %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                {{ editeur.nom }}
+                                <span>
+                                    <a href="{% url 'modifier_editeur' editeur.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <a href="{% url 'supprimer_editeur' editeur.id %}" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
+                                </span>
+                            </li>
+                        {% empty %}
+                            <li class="list-group-item">Aucun éditeur disponible.</li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'ajouter_editeur' %}" class="btn btn-success w-100 mt-3 rounded-pill">
+                        <i class="fas fa-plus-circle me-2"></i> Ajouter un éditeur
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

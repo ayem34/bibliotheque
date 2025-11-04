@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Liste des exemplaires</h2>
+<a href="{% url 'ajouter_exemplaire' %}" class="btn btn-primary">Ajouter un exemplaire</a>
+<table class="table table-striped mt-3">
+  <thead>
+    <tr>
+      <th>Livre</th>
+      <th>Code-barre</th>
+      <th>Disponible</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ex in exemplaires %}
+    <tr>
+      <td>{{ ex.livre.titre }}</td>
+      <td>{{ ex.code_barre }}</td>
+      <td>{{ ex.disponible|yesno:"Oui,Non" }}</td>
+      <td>
+        <a href="{% url 'modifier_exemplaire' ex.id %}" class="btn btn-warning btn-sm">Modifier</a>
+        <a href="{% url 'supprimer_exemplaire' ex.id %}" class="btn btn-danger btn-sm">Supprimer</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

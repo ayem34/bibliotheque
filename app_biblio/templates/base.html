@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}Edu Biblio{% endblock %}</title>
+
+    <!-- CSS -->
+    <link href="{% static 'startbootstrap-sb-admin-2-gh-pages/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/css?family=Nunito:200,300,400,600,700,800,900" rel="stylesheet">
+    
+    <link href="{% static 'startbootstrap-sb-admin-2-gh-pages/css/sb-admin-2.min.css' %}" rel="stylesheet">
+
+
+
+</head>
+<body id="page-top">
+    <div id="wrapper">
+        <!-- Sidebar -->
+        {% include 'partials/sidebar.html' %}
+        <!-- End of Sidebar -->
+
+        <!-- Content Wrapper -->
+        <div id="content-wrapper" class="d-flex flex-column">
+            <div id="content">
+                <!-- Topbar -->
+                {% include 'partials/topbar.html' %}
+                <!-- End of Topbar -->
+
+                <!-- Main Content -->
+                <div class="container-fluid">
+                    {% block content %}{% endblock %}
+                </div>
+                <!-- End of Main Content -->
+
+            </div>
+            <!-- Footer -->
+            <footer class="sticky-footer bg-white">
+                <div class="container my-auto">
+                    <div class="copyright text-center my-auto">
+                        <span>&copy; Edu Biblio 2025</span>
+                    </div>
+                </div>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Scroll to Top Button-->
+    <a class="scroll-to-top rounded" href="#page-top">
+        <i class="fas fa-angle-up"></i>
+    </a>
+
+    <!-- Logout Modal -->
+    {% include 'partials/logout_modal.html' %}
+
+    <!-- Scripts -->
+    <script src="{% static 'startbootstrap-sb-admin-2-gh-pages/vendor/jquery/jquery.min.js' %}"></script>
+    <script src="{% static 'startbootstrap-sb-admin-2-gh-pages/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+    <script src="{% static 'startbootstrap-sb-admin-2-gh-pages/vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+    <script src="{% static 'startbootstrap-sb-admin-2-gh-pages/js/sb-admin-2.min.js' %}"></script>
+    <script src="{% static 'startbootstrap-sb-admin-2-gh-pages/vendor/chart.js/Chart.min.js' %}"></script>
+    <script src="{% static 'startbootstrap-sb-admin-2-gh-pages/js/demo/chart-area-demo.js' %}"></script>  
+    <script src="{% static 'startbootstrap-sb-admin-2-gh-pages/js/demo/chart-pie-demo.js' %}"></script>  
+</body>
+</html>

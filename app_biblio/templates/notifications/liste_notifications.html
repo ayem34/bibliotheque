@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h3>
+    {% if user.role == "ADMIN" %}
+      Toutes les notifications
+    {% else %}
+      Mes notifications
+    {% endif %}
+  </h3>
+
+  {% if notifications %}
+    <a href="{% url 'marquer_toutes_lues' %}" class="btn btn-sm btn-success mb-2">Marquer toutes comme lues</a>
+    <ul class="list-group mt-3">
+      {% for notif in notifications %}
+        <li class="list-group-item {% if not notif.est_lu %}bg-light{% endif %}">
+          <strong>{{ notif.date_envoi|date:"d/m/Y H:i" }}</strong> : {{ notif.message }}
+          {% if not notif.est_lu %}
+            <a href="{% url 'marquer_lu' notif.id %}" class="btn btn-sm btn-primary float-right">Marquer lu</a>
+            <span class="badge badge-warning ml-2">Non lu</span>
+          {% endif %}
+          {% if user.role == "ADMIN" %}
+            <br><small class="text-muted">Pour {{ notif.utilisateur.username }}</small>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p>Aucune notification pour le moment.</p>
+  {% endif %}
+</div>
+{% endblock %}

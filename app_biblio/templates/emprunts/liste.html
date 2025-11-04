@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Emprunts{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h3 class="text-center mb-4">Gestion des Emprunts</h3>
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-header bg-gradient-primary text-white text-center py-3">
+            <h5><i class="fas fa-hand-holding me-2"></i>Liste des Emprunts</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        {% if request.user.role == 'ADMIN' %}
+                        <th>Utilisateur</th>
+                        {% endif %}
+                        <th>Livre</th>
+                        <th>Code Barre</th>
+                        <th>Date Demande</th>
+                        <th>Date Retour</th>
+                        <th>Statut</th>
+                        {% if request.user.role == 'ADMIN' %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in emprunts %}
+                        <tr>
+                            {% if request.user.role == 'ADMIN' %}
+                            <td>{{ e.utilisateur.username }}</td>
+                            {% endif %}
+                            <td>{{ e.exemplaire.livre.titre }}</td>
+                            <td>{{ e.exemplaire.code_barre }}</td>
+                            <td>{{ e.date_demande|date:"d/m/Y H:i" }}</td>
+                            <td>{{ e.date_retour|date:"d/m/Y H:i"|default:"-" }}</td>
+                            <td>
+                                {% if e.statut == 'EN_ATTENTE' %}
+                                    <span class="badge bg-warning text-dark">En attente</span>
+                                {% elif e.statut == 'VALIDE' %}
+                                    <span class="badge bg-success">Validé</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Rendu</span>
+                                {% endif %}
+                            </td>
+                            {% if request.user.role == 'ADMIN' %}
+                            <td>
+                                <a href="{% url 'modifier_emprunt' e.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'supprimer_emprunt' e.id %}" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash-alt"></i>
+                                </a>
+                            </td>
+                            {% endif %}
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="{% if request.user.role == 'ADMIN' %}7{% else %}6{% endif %}" class="text-center">
+                                Aucun emprunt trouvé.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            {% if request.user.role != 'ADMIN' %}
+            <a href="{% url 'demander_emprunt' %}" class="btn btn-success w-100 mt-3 rounded-pill">
+                <i class="fas fa-plus-circle me-2"></i> Demander un emprunt
+            </a>
+            {% endif %}
+
+        </div>
+    </div>
+</div>
+{% endblock %}

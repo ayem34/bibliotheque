@@ -1,0 +1,140 @@
+{% extends 'base.html' %}
+{% block title %}{{ livre.titre }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-lg p-4">
+        <!-- Détails du livre -->
+        <h3 class="text-primary mb-3"><i class="fas fa-book me-2"></i>{{ livre.titre }}</h3>
+        <p><strong>Auteur :</strong> {{ livre.auteur }}</p>
+        <p><strong>Catégorie :</strong> {{ livre.categorie }}</p>
+        <p><strong>Type :</strong> {{ livre.type_livre }}</p>
+        <p><strong>Éditeur :</strong> {{ livre.editeur }}</p>
+        <p><strong>Description :</strong> {{ livre.description }}</p>
+        <hr>
+
+        <!-- Commentaires -->
+        <h5 class="mt-4"><i class="fas fa-comments me-2"></i>Commentaires</h5>
+        {% if commentaires %}
+            {% for commentaire in commentaires %}
+                <div class="border rounded p-3 mb-2 {% if commentaire.utilisateur == request.user %}bg-light{% endif %}">
+                    <strong>{{ commentaire.utilisateur.username }}</strong> -
+                    <span class="text-warning">
+                        {% for i in "12345"|slice:":5" %}
+                            {% if forloop.counter <= commentaire.note %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                    </span><br>
+                    <small class="text-muted">{{ commentaire.date_commentaire|date:"d/m/Y H:i" }}</small>
+                    <p class="mt-2">{{ commentaire.contenu }}</p>
+
+                    {% if commentaire.utilisateur == request.user and not en_modification %}
+                        <!-- Boutons modifier/supprimer -->
+                        <form method="post" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" name="demander_modification" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-edit"></i> Modifier
+                            </button>
+                        </form>
+                        <!-- Modal suppression -->
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#modalSupprimer{{ commentaire.id }}">
+                            <i class="fas fa-trash"></i> Supprimer
+                        </button>
+                        <div class="modal fade" id="modalSupprimer{{ commentaire.id }}" tabindex="-1" role="dialog" aria-labelledby="modalLabel{{ commentaire.id }}" aria-hidden="true">
+                          <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                              <div class="modal-header bg-danger text-white">
+                                <h5 class="modal-title" id="modalLabel{{ commentaire.id }}">Confirmer la suppression</h5>
+                                <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fermer">
+                                  <span aria-hidden="true">&times;</span>
+                                </button>
+                              </div>
+                              <div class="modal-body">
+                                Voulez-vous vraiment supprimer votre commentaire sur <strong>{{ livre.titre }}</strong> ?
+                              </div>
+                              <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" name="supprimer_commentaire" class="btn btn-danger">Oui, supprimer</button>
+                                </form>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+
+            <!-- Pagination -->
+            <nav aria-label="Commentaires">
+              <ul class="pagination justify-content-center">
+                {% if commentaires.has_previous %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ commentaires.previous_page_number }}" aria-label="Précédent">&laquo;</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                {% endif %}
+
+                {% for num in commentaires.paginator.page_range %}
+                  {% if commentaires.number == num %}
+                    <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                  {% else %}
+                    <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                  {% endif %}
+                {% endfor %}
+
+                {% if commentaires.has_next %}
+                  <li class="page-item">
+                    <a class="page-link" href="?page={{ commentaires.next_page_number }}" aria-label="Suivant">&raquo;</a>
+                  </li>
+                {% else %}
+                  <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                {% endif %}
+              </ul>
+            </nav>
+        {% else %}
+            <p class="text-muted">Aucun commentaire pour ce livre.</p>
+        {% endif %}
+        <hr>
+
+        <!-- Formulaire -->
+        {% if en_modification %}
+            <h5 class="mt-4">Modifier votre commentaire</h5>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" name="modifier_commentaire" class="btn btn-success">
+                    <i class="fas fa-check me-1"></i> Enregistrer
+                </button>
+                <button type="submit" name="annuler_modification" class="btn btn-secondary">
+                    <i class="fas fa-times me-1"></i> Annuler
+                </button>
+            </form>
+        {% elif not deja_commente and form %}
+            <h5 class="mt-4">Ajouter un commentaire</h5>
+            <form method="post">
+                {% csrf_token %}
+                <div class="mb-3">
+                    {{ form.note.label_tag }}
+                    {{ form.note }}
+                </div>
+                <div class="mb-3">
+                    {{ form.contenu.label_tag }}
+                    {{ form.contenu }}
+                </div>
+                <button type="submit" name="ajouter_commentaire" class="btn btn-success">
+                    <i class="fas fa-paper-plane me-1"></i> Publier
+                </button>
+            </form>
+        {% elif deja_commente %}
+            <p class="text-muted mt-4"><i class="fas fa-check"></i> Vous avez déjà commenté ce livre.</p>
+        {% else %}
+            <p class="text-muted mt-4"><i class="fas fa-lock"></i> Seuls les adhérents peuvent commenter ce livre.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

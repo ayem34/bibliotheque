@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Ajouter un Auteur{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-4">
+                <div class="card-header bg-gradient-primary text-white text-center py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-user-pen me-2"></i> Ajouter un Auteur
+                    </h5>
+                </div>
+
+                <div class="card-body px-4 py-4">
+                    <form method="POST">
+                        {% csrf_token %}
+                        {{ form.non_field_errors }}
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user-tag me-2 text-primary"></i> Nom
+                            </label>
+                            <input type="text" name="nom" class="form-control form-control-sm rounded-pill shadow-sm" placeholder="Ex: Hugo" value="{{ form.nom.value|default_if_none:'' }}">
+                            {{ form.nom.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-user-edit me-2 text-primary"></i> Prénom
+                            </label>
+                            <input type="text" name="prenom" class="form-control form-control-sm rounded-pill shadow-sm" placeholder="Ex: Victor" value="{{ form.prenom.value|default_if_none:'' }}">
+                            {{ form.prenom.errors }}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="fas fa-globe me-2 text-primary"></i> Nationalité
+                            </label>
+                            <input type="text" name="nationalite" class="form-control form-control-sm rounded-pill shadow-sm" placeholder="Ex: Française" value="{{ form.nationalite.value|default_if_none:'' }}">
+                            {{ form.nationalite.errors }}
+                        </div>
+
+                        <button type="submit" class="btn btn-success w-100 rounded-pill shadow-sm">
+                            <i class="fas fa-plus-circle me-2"></i> Ajouter
+                        </button>
+                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary w-100 mt-2 rounded-pill shadow-sm">
+                            <i class="fas fa-arrow-left me-2"></i> Annuler
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

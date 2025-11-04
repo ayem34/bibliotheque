@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% block title %}Tableau de bord{% endblock %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <!-- Titre de la liste -->
+    <div class="card-header py-3 text-center" style="background-color: #0069d9;">
+        <h6 class="m-0 font-weight-bold text-white">Liste des Utilisateurs</h6>
+    </div>
+
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-hover" id="dataTable" width="100%" cellspacing="0">
+                <!-- Entête du tableau -->
+                <thead style="background-color: #495057; color: white;">
+                    <tr>
+                        <th>#</th>
+                        <th>Nom</th>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Téléphone</th>
+                        <th>Adresse</th>
+                        <th>Date d'inscription</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                
+                <tbody>
+                    {% for u in utilisateurs %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ u.first_name }} {{ u.last_name }}</td>
+                        <td>{{ u.username }}</td>
+                        <td>{{ u.email }}</td>
+                        <td>
+                            {% if u.role == "ADMIN" %}
+                                <span class="badge rounded-pill" style="background-color: #dc3545; color: white;">{{ u.get_role_display }}</span>
+                            {% else %}
+                                <span class="badge rounded-pill" style="background-color: #28a745; color: white;">{{ u.get_role_display }}</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ u.telephone|default:"Non renseigné" }}</td>
+                        <td>{{ u.adresse|default:"Non renseignée" }}</td>
+                        <td>{{ u.date_inscription|date:"d/m/Y H:i" }}</td>
+                        <td class="text-center">
+                            <!-- Modifier -->
+                            <a href="" class="icon-btn text-white me-2" style="background-color: #0d6efd; font-size: 0.8rem; padding: 3px 6px;" title="Modifier">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <!-- Supprimer -->
+                            <a href="" class="icon-btn text-white" style="background-color: #f56565; font-size: 0.8rem; padding: 3px 6px;" 
+                               onclick="return confirm('Voulez-vous vraiment supprimer cet utilisateur ?');" title="Supprimer">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" class="text-center">Aucun utilisateur trouvé.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Lignes alternées et hover */
+    #dataTable tbody tr:nth-child(even) {
+        background-color: #f2f2f2;
+    }
+    #dataTable tbody tr:hover {
+        background-color: #e9ecef;
+    }
+
+    /* Style des icônes avec fond et arrondi */
+    .icon-btn {
+        display: inline-block;
+        border-radius: 5px;
+        text-align: center;
+        transition: 0.3s;
+    }
+    .icon-btn:hover {
+        opacity: 0.8;
+        text-decoration: none;
+    }
+</style>
+{% endblock %}

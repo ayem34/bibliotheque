@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% block title %}Livres{% endblock %}
+{% block content %}
+<div class="container mt-5">
+    <h3 class="mb-4 text-center">Liste des Livres</h3>
+    {% if role == "ADMIN" %}
+        <!-- Table pour admin -->
+        <div class="card shadow-lg border-0 rounded-4">
+            <div class="card-header bg-gradient-primary text-white text-center py-3">
+                <h5 class="mb-0"><i class="fas fa-book me-2"></i>Gestion des Livres</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Titre</th>
+                            <th>Auteur</th>
+                            <th>Catégorie</th>
+                            <th>Type</th>
+                            <th>Éditeur</th>
+                            <th>Numérique</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for livre in livres %}
+                            <tr>
+                                <td>{{ livre.titre }}</td>
+                                <td>{{ livre.auteur }}</td>
+                                <td>{{ livre.categorie }}</td>
+                                <td>{{ livre.type_livre }}</td>
+                                <td>{{ livre.editeur }}</td>
+                                <td>
+                                    {% if livre.est_numerique %}
+                                        <span class="badge bg-success text-white fw-bold">Numérique</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark fw-bold">Physique</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'modifier_livre' livre.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                    <!-- Bouton suppression -->
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ livre.id }}">
+                                         <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                           <!-- Modal suppression -->
+<div class="modal fade" id="deleteModal{{ livre.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ livre.id }}" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteModalLabel{{ livre.id }}">Confirmer la suppression</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Fermer">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        Voulez-vous vraiment supprimer le livre <strong>{{ livre.titre }}</strong> ?
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Annuler</button>
+        <a href="{% url 'supprimer_livre' livre.id %}" class="btn btn-danger">Supprimer</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <a href="{% url 'ajouter_livre' %}" class="btn btn-success w-100 mt-3 rounded-pill">
+                    <i class="fas fa-plus-circle me-2"></i> Ajouter un livre
+                </a>
+            </div>
+        </div>
+    {% else %}
+        <!-- Recherche pour adhérent -->
+        <form method="get" class="mb-4">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher un livre..." value="{{ request.GET.q }}">
+                <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
+            </div>
+        </form>
+        <!-- Cartes pour adhérent -->
+        <div class="row">
+            {% for livre in livres %}
+                <div class="col-md-4 mb-4">
+                    <div class="card shadow h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">{{ livre.titre }}</h5>
+                            <p class="card-text">
+                                Auteur : {{ livre.auteur }} <br>
+                                Catégorie : {{ livre.categorie }} <br>
+                                Type : {{ livre.type_livre }} <br>
+                                Éditeur : {{ livre.editeur }}
+                            </p>
+                            {% if livre.nb_disponibles > 0 %}
+                                <form method="POST" action="">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success w-100 mb-2">
+                                        <i class="fas fa-book-reader me-1"></i> Emprunter
+                                    </button>
+                                </form>
+                            {% else %}
+                                <button class="btn btn-secondary w-100 mb-2" disabled>Indisponible</button>
+                            {% endif %}
+                            <a href="{% url 'detail_livre' livre.id %}" class="btn btn-outline-info w-100">Voir plus</a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <p class="text-muted ms-3">Aucun livre disponible.</p>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
