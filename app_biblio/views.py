@@ -311,24 +311,74 @@ def liste_catalogue(request):
 
 #crud sur les livre 
 
+from django.shortcuts import render
+from django.db.models import Count, Q
+from django.core.paginator import Paginator
+from .models import Livre, Auteur, Categorie, TypeLivre, Editeur
+
+@login_required
 def liste_livres(request):
-    livres = Livre.objects.select_related('auteur', 'categorie', 'type_livre', 'editeur').annotate(
+    """
+    Affiche les livres avec filtrage et pagination :
+    - Recherche par titre, auteur, catégorie, type, éditeur
+    - Filtre par disponibilité
+    - Pagination par 10 livres
+    """
+    # Base : tous les livres avec nombre d'exemplaires disponibles
+    livres = Livre.objects.select_related(
+        'auteur', 'categorie', 'type_livre', 'editeur'
+    ).annotate(
         nb_disponibles=Count('exemplaire', filter=Q(exemplaire__disponible=True))
-    )
+    ).order_by('titre')
 
+    # --- FILTRAGE ---
+    query = request.GET.get('q')  # titre
+    auteur_id = request.GET.get('auteur')
+    categorie_id = request.GET.get('categorie')
+    type_id = request.GET.get('type')
+    editeur_id = request.GET.get('editeur')
+    dispo = request.GET.get('disponible')  # "1" si disponible
 
-    
-     #  filtrer ou chercher :
-    query = request.GET.get('q')
     if query:
         livres = livres.filter(titre__icontains=query)
+    if auteur_id and auteur_id.isdigit():
+        livres = livres.filter(auteur_id=int(auteur_id))
+    if categorie_id and categorie_id.isdigit():
+        livres = livres.filter(categorie_id=int(categorie_id))
+    if type_id and type_id.isdigit():
+        livres = livres.filter(type_livre_id=int(type_id))
+    if editeur_id and editeur_id.isdigit():
+        livres = livres.filter(editeur_id=int(editeur_id))
+    if dispo == '1':
+        livres = livres.filter(nb_disponibles__gt=0)
 
+    # Pagination : 10 livres par page
+    paginator = Paginator(livres, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    # Données pour les filtres
+    auteurs = Auteur.objects.all()
+    categories = Categorie.objects.all()
+    types_livre = TypeLivre.objects.all()
+    editeurs = Editeur.objects.all()
 
     return render(request, 'livres/liste.html', {
-        'livres': livres,
-        'role': request.user.role  # On passe le rôle au template
+        'page_obj': page_obj,
+        'role': request.user.role,
+        'query': query,
+        'auteurs': auteurs,
+        'categories': categories,
+        'types_livre': types_livre,
+        'editeurs': editeurs,
+        'filtres': {
+            'auteur_id': auteur_id,
+            'categorie_id': categorie_id,
+            'type_id': type_id,
+            'editeur_id': editeur_id,
+            'dispo': dispo,
+        }
     })
-
 
 def ajouter_livre(request):
     if request.method == 'POST':
@@ -394,85 +444,216 @@ def supprimer_exemplaire(request, id):
 @login_required
 def liste_emprunts(request):
     """
-    Affiche :
-    - Pour l'admin : tous les emprunts
-    - Pour l'adhérent : seulement ses propres emprunts
+    - Admin : affiche tous les emprunts par défaut
+    - Adhérent : affiche uniquement ses emprunts actifs par défaut
+    - Filtrage possible par statut via GET ?statut=VALIDE
+    - Pagination par 10 emprunts
     """
-    if request.user.role.upper() == 'ADMIN':
-        emprunts = Emprunt.objects.select_related('utilisateur', 'exemplaire__livre')
-    else:
-        # L'adhérent ne voit que ses emprunts
-        emprunts = Emprunt.objects.select_related('exemplaire__livre').filter(utilisateur=request.user)
-    
-    return render(request, 'emprunts/liste.html', {'emprunts': emprunts})
+    statut_filter = request.GET.get('statut')  # ex: ?statut=VALIDE
 
+    if request.user.role.upper() == 'ADMIN':
+        emprunts = Emprunt.objects.select_related('utilisateur', 'exemplaire__livre').order_by('-date_demande')
+        if statut_filter and statut_filter in dict(Emprunt.STATUT_CHOICES):
+            emprunts = emprunts.filter(statut=statut_filter)
+    else:
+        # Adhérent : par défaut, uniquement emprunts actifs
+        emprunts = Emprunt.objects.select_related('exemplaire__livre').filter(
+            utilisateur=request.user
+        ).order_by('-date_demande')
+        if statut_filter and statut_filter in dict(Emprunt.STATUT_CHOICES):
+            emprunts = emprunts.filter(statut=statut_filter)
+        else:
+            # Filtre par défaut : seuls les emprunts EN_ATTENTE et VALIDE
+            emprunts = emprunts.filter(statut__in=['EN_ATTENTE', 'VALIDE'])
+
+    # Pagination
+    paginator = Paginator(emprunts, 10)  # 10 emprunts par page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'emprunts/liste.html', {
+        'page_obj': page_obj,
+        'statut_filter': statut_filter,
+        'statut_choices': Emprunt.STATUT_CHOICES,
+    })
+
+# Fonction utilitaire pour vérifier la disponibilité
+def est_disponible(exemplaire):
+    return not Emprunt.objects.filter(
+        exemplaire=exemplaire,
+        statut__in=['EN_ATTENTE', 'VALIDE']
+    ).exists()
+
+# ------------------ Vues Admin ------------------
+
+@login_required
 def ajouter_emprunt(request):
+    if request.user.role.upper() != 'ADMIN':
+        messages.error(request, "Vous n'avez pas la permission d'ajouter un emprunt ici.")
+        return redirect('liste_emprunts')
     if request.method == 'POST':
         form = EmpruntForm(request.POST)
         if form.is_valid():
             emprunt = form.save(commit=False)
 
-            # Vérifie si l'utilisateur a déjà un emprunt actif
-            emprunt_actif = Emprunt.objects.filter(
+            # Vérifier que l'utilisateur n'est pas un admin
+            if emprunt.utilisateur.role.upper() == 'ADMIN':
+                form.add_error('utilisateur', "Un administrateur ne peut pas emprunter de livre.")
+                return render(request, 'emprunts/ajouter.html', {'form': form})
+
+            # Vérifier qu'il n'y a pas déjà un emprunt actif pour cet utilisateur
+            if Emprunt.objects.filter(
                 utilisateur=emprunt.utilisateur,
                 statut__in=['EN_ATTENTE', 'VALIDE']
-            ).exists()
-            if emprunt_actif:
-                form.add_error(None, "L'utilisateur a déjà un emprunt en cours.")
-            elif not emprunt.exemplaire.disponible:
+            ).exists():
+                form.add_error(None, "L'utilisateur a déjà un emprunt actif.")
+                return render(request, 'emprunts/ajouter.html', {'form': form})
+
+            # Vérifier la disponibilité dynamique de l'exemplaire
+            if not est_disponible(emprunt.exemplaire):
                 form.add_error('exemplaire', "Cet exemplaire est déjà emprunté.")
-            else:
-                emprunt.save()
+                return render(request, 'emprunts/ajouter.html', {'form': form})
+
+            # Limiter le statut
+            if emprunt.statut not in ['EN_ATTENTE', 'VALIDE']:
+                emprunt.statut = 'EN_ATTENTE'
+
+            emprunt.save()
+
+            # Mettre à jour la disponibilité si statut VALIDE
+            if emprunt.statut == 'VALIDE':
                 emprunt.exemplaire.disponible = False
                 emprunt.exemplaire.save()
-                return redirect('liste_emprunts')
+
+            # Notification
+            Notification.objects.create(
+                utilisateur=emprunt.utilisateur,
+                message=f"Un nouvel emprunt pour '{emprunt.exemplaire.livre.titre}' a été créé (statut : {emprunt.get_statut_display()})."
+            )
+            return redirect('liste_emprunts')
     else:
         form = EmpruntForm()
     return render(request, 'emprunts/ajouter.html', {'form': form})
+
+
+@login_required
 def modifier_emprunt(request, id):
     emprunt = get_object_or_404(Emprunt, id=id)
+    ancien_statut = emprunt.statut
+
+    if emprunt.statut in ['ANNULE', 'REFUSE', 'RENDU']:
+        messages.error(request, f"Impossible de modifier un emprunt {emprunt.get_statut_display().lower()}.")
+        return redirect('liste_emprunts')
+
     if request.method == 'POST':
         form = EmpruntForm(request.POST, instance=emprunt)
         if form.is_valid():
-            form.save()
+            nouveau_statut = form.cleaned_data.get('statut')
+
+            # Vérifier logique de transition
+            if ancien_statut == 'EN_ATTENTE' and nouveau_statut not in ['VALIDE', 'REFUSE', 'ANNULE']:
+                messages.error(request, "Un emprunt en attente ne peut être modifié que pour VALIDE, REFUSE ou ANNULE.")
+                return redirect('liste_emprunts')
+            elif ancien_statut == 'VALIDE' and nouveau_statut != 'RENDU':
+                messages.error(request, "Un emprunt validé ne peut évoluer qu'en 'RENDU'.")
+                return redirect('liste_emprunts')
+
+            emprunt = form.save(commit=False)
+            emprunt.save()
+
+            # Notifications
+            if ancien_statut != emprunt.statut:
+                Notification.objects.create(
+                    utilisateur=emprunt.utilisateur,
+                    message=f"Le statut de votre emprunt pour '{emprunt.exemplaire.livre.titre}' est maintenant : {emprunt.get_statut_display()}."
+                )
+
+            # Mettre à jour la disponibilité
+            if emprunt.statut in ['RENDU', 'ANNULE', 'REFUSE']:
+                emprunt.exemplaire.disponible = True
+                emprunt.exemplaire.save()
+            elif emprunt.statut == 'VALIDE':
+                emprunt.exemplaire.disponible = False
+                emprunt.exemplaire.save()
+
             return redirect('liste_emprunts')
     else:
         form = EmpruntForm(instance=emprunt)
     return render(request, 'emprunts/ajouter.html', {'form': form, 'emprunt': emprunt})
 
-def supprimer_emprunt(request, id):
+
+@login_required
+def annuler_emprunt(request, id):
     emprunt = get_object_or_404(Emprunt, id=id)
-    exemplaire = emprunt.exemplaire
-    emprunt.delete()
-    # Si supprimé, on rend l’exemplaire à nouveau disponible
-    exemplaire.disponible = True
-    exemplaire.save()
+    if emprunt.statut == 'EN_ATTENTE':
+        emprunt.statut = 'ANNULE'
+        emprunt.save()
+        emprunt.exemplaire.disponible = True
+        emprunt.exemplaire.save()
+
+        # Notifications aux admins
+        for admin in Utilisateur.objects.filter(role__iexact='ADMIN'):
+            Notification.objects.create(
+                utilisateur=admin,
+                message=f"Demande d'emprunt annulée pour {emprunt.exemplaire.livre.titre} par {emprunt.utilisateur.username}."
+            )
     return redirect('liste_emprunts')
-#gestion emprunt cote adherent 
+
+
+@login_required
+def refuser_emprunt(request, id):
+    emprunt = get_object_or_404(Emprunt, id=id)
+    if emprunt.statut == 'EN_ATTENTE':
+        emprunt.statut = 'REFUSE'
+        emprunt.save()
+        emprunt.exemplaire.disponible = True
+        emprunt.exemplaire.save()
+
+        # Notification à l'utilisateur
+        Notification.objects.create(
+            utilisateur=emprunt.utilisateur,
+            message=f"Votre demande d'emprunt pour '{emprunt.exemplaire.livre.titre}' a été refusée."
+        )
+    return redirect('liste_emprunts')
+
+
+# ------------------ Vues Adhérent ------------------
+
 @login_required
 def demander_emprunt(request):
     if request.method == 'POST':
         form = EmpruntAdherentForm(request.POST)
         if form.is_valid():
-            # Vérifier si l'utilisateur a déjà un emprunt actif
-            emprunt_actif = Emprunt.objects.filter(
+            # Vérifier emprunt actif
+            if Emprunt.objects.filter(
                 utilisateur=request.user,
                 statut__in=['EN_ATTENTE', 'VALIDE']
-            ).exists()
-            if emprunt_actif:
+            ).exists():
                 form.add_error(None, "Vous avez déjà un emprunt en cours.")
             else:
                 emprunt = form.save(commit=False)
                 emprunt.utilisateur = request.user
                 emprunt.statut = 'EN_ATTENTE'
                 emprunt.date_retour = timezone.now() + timedelta(days=7)
+
+                # Vérifier disponibilité
+                if not est_disponible(emprunt.exemplaire):
+                    form.add_error('exemplaire', "Cet exemplaire est déjà emprunté.")
+                    return render(request, 'emprunts/demander.html', {'form': form})
+
                 emprunt.save()
                 emprunt.exemplaire.disponible = False
                 emprunt.exemplaire.save()
-                return redirect('mes_emprunts')
+
+                # Notifications aux admins
+                for admin in Utilisateur.objects.filter(role__iexact='ADMIN'):
+                    Notification.objects.create(
+                        utilisateur=admin,
+                        message=f"Nouvelle demande d'emprunt pour {emprunt.exemplaire.livre.titre} par {request.user.username}."
+                    )
+                return redirect('liste_emprunts')
     else:
         form = EmpruntAdherentForm()
-
     return render(request, 'emprunts/demander.html', {'form': form})
 @login_required
 def detail_livre(request, id):

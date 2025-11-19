@@ -105,7 +105,6 @@ class ExemplaireForm(forms.ModelForm):
             }
         }
 
-
 class EmpruntForm(forms.ModelForm):
     class Meta:
         model = Emprunt
@@ -119,40 +118,38 @@ class EmpruntForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
-        # Récupérer les id des exemplaires occupés
+        # Empêcher de sélectionner un exemplaire déjà emprunté
         emprunt_occupe = Emprunt.objects.filter(
             Q(statut='EN_ATTENTE') | Q(statut='VALIDE')
         ).values_list('exemplaire_id', flat=True)
-
-        # Transformer en liste pour pouvoir modifier
         emprunt_occupe = list(emprunt_occupe)
 
-        # Si on modifie un emprunt existant, on retire son exemplaire actuel de la liste
+        # Retirer l'exemplaire actuel si modification
         if self.instance and self.instance.pk and self.instance.exemplaire:
             if self.instance.exemplaire.id in emprunt_occupe:
                 emprunt_occupe.remove(self.instance.exemplaire.id)
 
-        # Définir le queryset des exemplaires disponibles
         self.fields['exemplaire'].queryset = Exemplaire.objects.exclude(id__in=emprunt_occupe)
 
     def clean(self):
         cleaned_data = super().clean()
         date_retour = cleaned_data.get('date_retour')
-        
-        # Date de demande : maintenant si nouvel emprunt
         date_demande = self.instance.date_demande if self.instance.pk else timezone.now()
-        
-        # Vérification : date de retour après date de demande
+
         if date_retour and date_retour <= date_demande:
             self.add_error('date_retour', "La date de retour doit être après la date de demande.")
-        
-        # Limite maximale : 30 jours après la date de demande
+
         limite_max = date_demande + timedelta(days=30)
         if date_retour and date_retour > limite_max:
             self.add_error('date_retour', "La date de retour ne peut pas dépasser 30 jours après la date de demande.")
-        
+
         return cleaned_data
+    
+    def clean_utilisateur(self):
+        utilisateur = self.cleaned_data.get('utilisateur')
+        if utilisateur.role.upper() == 'ADMIN':
+            raise forms.ValidationError("Un administrateur ne peut pas emprunter de livre.")
+        return utilisateur
 
 
 class EmpruntAdherentForm(forms.ModelForm):

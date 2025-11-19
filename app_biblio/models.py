@@ -68,10 +68,12 @@ class Exemplaire(models.Model):
 
 class Emprunt(models.Model):
     STATUT_CHOICES = [
-        ('EN_ATTENTE', 'En attente'),
-        ('VALIDE', 'Validé'),
-        ('RENDU', 'Rendu'),
-    ]
+    ('EN_ATTENTE', 'En attente'),
+    ('VALIDE', 'Validé'),
+    ('RENDU', 'Rendu'),
+    ('REFUSE', 'Refusé'),
+    ('ANNULE', 'Annulé')
+]
     utilisateur = models.ForeignKey(Utilisateur, on_delete=models.CASCADE)
     exemplaire = models.ForeignKey(Exemplaire, on_delete=models.CASCADE)
     date_demande = models.DateTimeField(auto_now_add=True)

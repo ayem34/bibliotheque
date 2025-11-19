@@ -51,7 +51,9 @@
         <div id="collapseEmprunts" class="collapse" aria-labelledby="headingEmprunts" data-parent="#accordionSidebar">
             <div class="bg-white py-2 collapse-inner rounded shadow-sm">
                 <h6 class="collapse-header">Actions :</h6>
+                 {% if request.user.role == 'ADMIN' %}
                 <a class="collapse-item" href="{% url 'ajouter_emprunt' %}"><i class="fas fa-plus me-1"></i> Ajouter un emprunt</a>
+                 {% endif %}
                 <a class="collapse-item" href="{% url 'liste_emprunts' %}"><i class="fas fa-list me-1"></i> Voir les emprunts</a>
             </div>
         </div>

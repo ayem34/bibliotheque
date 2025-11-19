@@ -1,54 +1,110 @@
 {% extends 'base.html' %}
 {% block title %}Livres{% endblock %}
+
 {% block content %}
 <div class="container mt-5">
-    <h3 class="mb-4 text-center">Liste des Livres</h3>
-    {% if role == "ADMIN" %}
-        <!-- Table pour admin -->
-        <div class="card shadow-lg border-0 rounded-4">
-            <div class="card-header bg-gradient-primary text-white text-center py-3">
-                <h5 class="mb-0"><i class="fas fa-book me-2"></i>Gestion des Livres</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-striped align-middle">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Titre</th>
-                            <th>Auteur</th>
-                            <th>Catégorie</th>
-                            <th>Type</th>
-                            <th>Éditeur</th>
-                            <th>Numérique</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for livre in livres %}
-                            <tr>
-                                <td>{{ livre.titre }}</td>
-                                <td>{{ livre.auteur }}</td>
-                                <td>{{ livre.categorie }}</td>
-                                <td>{{ livre.type_livre }}</td>
-                                <td>{{ livre.editeur }}</td>
-                                <td>
-                                    {% if livre.est_numerique %}
-                                        <span class="badge bg-success text-white fw-bold">Numérique</span>
-                                    {% else %}
-                                        <span class="badge bg-warning text-dark fw-bold">Physique</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <a href="{% url 'modifier_livre' livre.id %}" class="btn btn-sm btn-outline-primary me-1">
-                                        <i class="fas fa-edit"></i>
-                                    </a>
-                                    <!-- Bouton suppression -->
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ livre.id }}">
-                                         <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </td>
-                            </tr>
+    <h3 class="mb-4 text-center">Catalogue des Livres</h3>
 
-                           <!-- Modal suppression -->
+    {% if role == "ADMIN" %}
+        <!-- Admin : filtres -->
+        <form method="get" class="row g-2 mb-4">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher par titre..." value="{{ query|default:'' }}">
+            </div>
+            <div class="col-md-2">
+                <select name="auteur" class="form-select">
+                    <option value="">Auteur</option>
+                    {% for auteur in auteurs %}
+                        <option value="{{ auteur.id }}" {% if filtres.auteur_id == auteur.id|stringformat:"s" %}selected{% endif %}>
+                            {{ auteur.nom }} {{ auteur.prenom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="categorie" class="form-select">
+                    <option value="">Catégorie</option>
+                    {% for categorie in categories %}
+                        <option value="{{ categorie.id }}" {% if filtres.categorie_id == categorie.id|stringformat:"s" %}selected{% endif %}>
+                            {{ categorie.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="type" class="form-select">
+                    <option value="">Type</option>
+                    {% for type_livre in types_livre %}
+                        <option value="{{ type_livre.id }}" {% if filtres.type_id == type_livre.id|stringformat:"s" %}selected{% endif %}>
+                            {{ type_livre.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select name="editeur" class="form-select">
+                    <option value="">Éditeur</option>
+                    {% for editeur in editeurs %}
+                        <option value="{{ editeur.id }}" {% if filtres.editeur_id == editeur.id|stringformat:"s" %}selected{% endif %}>
+                            {{ editeur.nom }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 mt-2">
+                <div class="form-check">
+                    <input type="checkbox" name="disponible" value="1" class="form-check-input" id="dispoCheck" {% if filtres.dispo == '1' %}checked{% endif %}>
+                    <label for="dispoCheck" class="form-check-label">Disponibles</label>
+                </div>
+            </div>
+            <div class="col-md-2 mt-2">
+                <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+            </div>
+        </form>
+
+        <!-- Tableau des livres -->
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Titre</th>
+                        <th>Auteur</th>
+                        <th>Catégorie</th>
+                        <th>Type</th>
+                        <th>Éditeur</th>
+                        <th class="text-center">Disponibles</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for livre in page_obj %}
+                        <tr>
+                            <td>{{ livre.titre }}</td>
+                            <td>{{ livre.auteur.nom }} {{ livre.auteur.prenom }}</td>
+                            <td>{{ livre.categorie.nom }}</td>
+                            <td>{{ livre.type_livre.nom }}</td>
+                            <td>{{ livre.editeur.nom }}</td>
+                            <td class="text-center">
+                                {% if livre.nb_disponibles > 0 %}
+                                    <span class="badge bg-success">{{ livre.nb_disponibles }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">0</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'modifier_livre' livre.id %}" class="btn btn-sm btn-outline-primary me-1">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+<button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ livre.id }}">
+    <i class="fas fa-trash-alt"></i>
+</button>
+                            </td>
+                        </tr>
+
+                        <!-- Modal suppression -->
+   
+
+<!-- Modal -->
 <div class="modal fade" id="deleteModal{{ livre.id }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ livre.id }}" aria-hidden="true">
   <div class="modal-dialog" role="document">
     <div class="modal-content">
@@ -68,54 +124,116 @@
     </div>
   </div>
 </div>
-
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <a href="{% url 'ajouter_livre' %}" class="btn btn-success w-100 mt-3 rounded-pill">
-                    <i class="fas fa-plus-circle me-2"></i> Ajouter un livre
-                </a>
-            </div>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center">Aucun livre trouvé.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Pagination">
+            <ul class="pagination justify-content-center mt-3">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key,value in filtres.items %}{% if value %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}">&laquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% for key,value in filtres.items %}{% if value %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% for key,value in filtres.items %}{% if value %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}">&raquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+
     {% else %}
-        <!-- Recherche pour adhérent -->
+        <!-- Adhérent : cartes simples -->
         <form method="get" class="mb-4">
             <div class="input-group">
-                <input type="text" name="q" class="form-control" placeholder="Rechercher un livre..." value="{{ request.GET.q }}">
+                <input type="text" name="q" class="form-control" placeholder="Rechercher un livre..." value="{{ query|default:'' }}">
                 <button class="btn btn-primary" type="submit"><i class="fas fa-search"></i></button>
             </div>
         </form>
-        <!-- Cartes pour adhérent -->
+
         <div class="row">
-            {% for livre in livres %}
-                <div class="col-md-4 mb-4">
-                    <div class="card shadow h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">{{ livre.titre }}</h5>
-                            <p class="card-text">
-                                Auteur : {{ livre.auteur }} <br>
-                                Catégorie : {{ livre.categorie }} <br>
-                                Type : {{ livre.type_livre }} <br>
-                                Éditeur : {{ livre.editeur }}
-                            </p>
-                            {% if livre.nb_disponibles > 0 %}
-                                <form method="POST" action="">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn-success w-100 mb-2">
-                                        <i class="fas fa-book-reader me-1"></i> Emprunter
-                                    </button>
-                                </form>
-                            {% else %}
-                                <button class="btn btn-secondary w-100 mb-2" disabled>Indisponible</button>
-                            {% endif %}
-                            <a href="{% url 'detail_livre' livre.id %}" class="btn btn-outline-info w-100">Voir plus</a>
-                        </div>
+            {% for livre in page_obj %}
+            <div class="col-md-4 mb-4">
+                <div class="card shadow h-100">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ livre.titre }}</h5>
+                        <p class="card-text">
+                            Auteur : {{ livre.auteur.nom }} {{ livre.auteur.prenom }}<br>
+                            Catégorie : {{ livre.categorie.nom }}<br>
+                            Type : {{ livre.type_livre.nom }}<br>
+                            Éditeur : {{ livre.editeur.nom }}
+                        </p>
+                        {% if livre.nb_disponibles > 0 %}
+                            <form method="POST" action="">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100 mb-2">
+                                    <i class="fas fa-book-reader me-1"></i> Emprunter
+                                </button>
+                            </form>
+                        {% else %}
+                            <button class="btn btn-secondary w-100 mb-2" disabled>Indisponible</button>
+                        {% endif %}
+                        <a href="{% url 'detail_livre' livre.id %}" class="btn btn-outline-info w-100">Voir plus</a>
                     </div>
                 </div>
+            </div>
             {% empty %}
                 <p class="text-muted ms-3">Aucun livre disponible.</p>
             {% endfor %}
         </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Pagination">
+            <ul class="pagination justify-content-center mt-3">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.previous_page_number }}">&laquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&laquo;</span></li>
+                {% endif %}
+                {% for num in page_obj.paginator.page_range %}
+                    {% if page_obj.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}page={{ num }}">{{ num }}</a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.next_page_number }}">&raquo;</a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">&raquo;</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
     {% endif %}
 </div>
 {% endblock %}

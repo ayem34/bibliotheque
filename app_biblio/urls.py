@@ -52,11 +52,11 @@ urlpatterns = [
   path('emprunts/', views.liste_emprunts, name='liste_emprunts'),
   path('emprunts/ajouter/', views.ajouter_emprunt, name='ajouter_emprunt'),
   path('emprunts/modifier/<int:id>/', views.modifier_emprunt, name='modifier_emprunt'),
-  path('emprunts/supprimer/<int:id>/', views.supprimer_emprunt, name='supprimer_emprunt'),
-
+  path('emprunt/<int:id>/annuler/', views.annuler_emprunt, name='annuler_emprunt'),
+  path('emprunt/<int:id>/refuser/', views.refuser_emprunt, name='refuser_emprunt'),
   
   # Demander un nouvel emprunt cote aderhent 
-    path('emprunts/demander/', views.demander_emprunt, name='demander_emprunt'),
+  path('emprunts/demander/', views.demander_emprunt, name='demander_emprunt'),
 
 
    # ... tes autres routes ...
